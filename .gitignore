@@ -1,0 +1,39 @@
+# CLion / JetBrains IDE
+.idea/
+*.iml
+cmake-build-*/
+
+# Executables and binaries
+*.exe
+*.out
+*.app
+*.dll
+*.so
+
+# Object files
+*.o
+*.obj
+
+# Logs and temp
+*.log
+*.tmp
+*.bak
+
+# CLion specific cmake folders
+cmake-build-debug*/
+cmake-build-release*/
+cmake-build-relwithdebinfo*/
+cmake-build-minsizerel*/
+
+# Cache / OS
+*.DS_Store
+Thumbs.db
+
+# Python helper scripts cache (if any)
+__pycache__/
+*.pyc
+
+# Project specific
+/*.csv
+/*.vtk
+/*.vti
