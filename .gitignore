@@ -1,6 +1,5 @@
 # CLion / JetBrains IDE
 .idea/
-*.iml
 cmake-build-*/
 
 # Executables and binaries
