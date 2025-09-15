@@ -10,7 +10,7 @@ namespace constants {
 }
 
 struct Vec3 {
-    double x, y, z;
+    double x{0.0}, y{0.0}, z{0.0};
 };
 //------------------------------------------------------------------------------
 struct ControlParams {
@@ -18,11 +18,12 @@ struct ControlParams {
     int pre_steps;
     int run_steps;
     int save_steps;
+    int show_steps;
     double dt_sec;
     double pre_Te_kelvin;
-    std::string run_parent_path;
+    std::string run_parent_dir;
     std::string run_base_folder;
-    std::string input_Te_path;
+    std::string Te_filepath;
 };
 struct LatParams {
     int nx, ny, nz; // number of cells
@@ -33,7 +34,7 @@ struct LatParams {
     double mx_init_Gd, my_init_Gd, mz_init_Gd;
     double Hx_appl_tesla, Hy_appl_tesla, Hz_appl_tesla;
     /// Derived
-    int N;
+    int N{0};
 };
 struct MatParams {
     double mu_ampere_m2;

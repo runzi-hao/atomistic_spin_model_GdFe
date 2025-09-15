@@ -14,12 +14,20 @@ void advance_and_normalize_m(
     const std::vector<double>& dmz_dt,
     const double h_sec)
 {
-    for (int i=0; i < mx_in.size(); ++i) {
+    const int N = static_cast<int>(mx_in.size());
+    if (h_sec == 0.0) {
+        for (int i = 0; i < N; ++i) {
+            mx_out[i] = mx_in[i];
+            my_out[i] = my_in[i];
+            mz_out[i] = mz_in[i];
+            normalize3(mx_out[i], my_out[i], mz_out[i]);
+        }
+        return;
+    }
+    for (int i=0; i < N; ++i) {
         mx_out[i] = mx_in[i] + h_sec * dmx_dt[i];
         my_out[i] = my_in[i] + h_sec * dmy_dt[i];
         mz_out[i] = mz_in[i] + h_sec * dmz_dt[i];
-    }
-    for (int i=0; i < mx_out.size(); ++i) {
         normalize3(mx_out[i], my_out[i], mz_out[i]);
     }
 }
@@ -36,7 +44,8 @@ void advance_and_normalize_m_Heun(
     const std::vector<double>& dmz_dt_st2,
     const double h_sec)
 {
-    for (int i=0; i < mx.size(); ++i) {
+    const int N = static_cast<int>(mx.size());
+    for (int i=0; i < N; ++i) {
         mx[i] += h_sec * 0.5 * (dmx_dt_st1[i] + dmx_dt_st2[i]);
         my[i] += h_sec * 0.5 * (dmy_dt_st1[i] + dmy_dt_st2[i]);
         mz[i] += h_sec * 0.5 * (dmz_dt_st1[i] + dmz_dt_st2[i]);
@@ -57,7 +66,8 @@ void compute_dm_dt_kernel(
     std::vector<double>& dmy_dt,
     std::vector<double>& dmz_dt)
 {
-    for (int i=0; i < species.size(); ++i) {
+    const int N = static_cast<int>(species.size());
+    for (int i=0; i < N; ++i) {
         const int s = species[i];
         const double gamma_rad_per_tesla_sec =
             phys_params[s].gamma_rad_per_tesla_sec;

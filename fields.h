@@ -6,6 +6,7 @@
 #include "rng.h"
 
 void compute_exch_field(
+    const MatParams mat[2],
     const double J_joule_per_link[2][2],
     const std::vector<std::array<int, constants::FCC_NN_COUNT>>&
     nearest_neighbors,
@@ -18,7 +19,7 @@ void compute_exch_field(
     std::vector<double>& Hz_exch_tesla);
 
 void compute_uniaxial_anis_field(
-    const MatParams phys_params[2],
+    const MatParams mat[2],
     const std::vector<uint8_t>& species,
     const std::vector<double>& mx_arr,
     const std::vector<double>& my_arr,
@@ -36,7 +37,7 @@ void compute_ther_field_once(
     std::vector<double>& Hz_ther_tesla);
 
 void compute_total_field(
-    const MatParams phys_params[2],
+    const MatParams mat[2],
     const double J_joule_per_link[2][2],
     const std::vector<std::array<int, constants::FCC_NN_COUNT>>&
     nearest_neighbors,

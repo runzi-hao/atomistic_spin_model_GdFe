@@ -10,7 +10,7 @@ void compute_bulk_m(const std::vector<uint8_t>& species,
     double sum_mx_all = 0.0, sum_my_all = 0.0, sum_mz_all = 0.0;
     int    cnt_Fe = 0, cnt_Gd = 0;
 
-    const int N = species.size();
+    const int N = static_cast<int>(species.size());
     for (int i = 0; i < N; ++i) {
         const double mx_i = mx[i];
         const double my_i = my[i];
@@ -46,7 +46,6 @@ void compute_bulk_m(const std::vector<uint8_t>& species,
         bulk.mx_bulk = bulk.my_bulk = bulk.mz_bulk = 0.0;
     }
 
-    // Species averages; if a species is absent, return 0 for that species
     if (cnt_Fe > 0) {
         const double inv = 1.0 / static_cast<double>(cnt_Fe);
         bulk.mx_Fe = sum_mx_Fe * inv;

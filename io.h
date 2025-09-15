@@ -1,5 +1,7 @@
 #ifndef IO_H
 #define IO_H
+#include <string>
+#include "params.h"
 
 bool read_input_csv(const std::string& csv_path, ControlParams& control,
     LatParams& lat, MatParams mat[2]);

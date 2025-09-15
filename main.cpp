@@ -17,7 +17,8 @@ int main() {
     LatParams lat{};
     MatParams mat[2]{};
 
-    read_input_csv("input.csv", control, lat, mat);
+    fs::path input_filepath = fs::current_path() / "input.csv";
+    read_input_csv(input_filepath.string(), control, lat, mat);
     /// Compute N, normalize easy axes and initial magnetizations
     process_input(lat, mat);
 
@@ -53,7 +54,7 @@ int main() {
     // 5. Read temperature series ----------------------------------------------
     std::vector<double> Te_kelvin_arr;
     read_temperature_series_csv(
-        control.input_Te_path + "/temperatures_input.txt",
+        control.Te_filepath,
         Te_kelvin_arr);
     if (static_cast<int>(Te_kelvin_arr.size()) < control.run_steps) {
         throw std::runtime_error("Temperature data not enough (" +
@@ -114,10 +115,13 @@ int main() {
         if (curr_step % control.save_steps == 0) {
             BulkValues bulk_vals{};
             compute_bulk_m(species, mx, my, mz, bulk_vals);
-            fs::path run_dir = fs::path(control.run_parent_path) /
+            fs::path run_dir = fs::path(control.run_parent_dir) /
                 control.run_base_folder;
             fs::path run_filepath = run_dir / "bulk_values_vs_time.csv";
             write_bulk_values(run_filepath.string(), curr_step, T_kelvin, bulk_vals);
+        }
+        if (curr_step % control.show_steps == 0) {
+            std::cout << curr_step << std::endl;
         }
     }
 

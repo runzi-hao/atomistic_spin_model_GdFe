@@ -1,8 +1,10 @@
 #include "fields.h"
 #include <array>
 #include <cmath>
+#include <vector>
 
 void compute_exch_field(
+    const MatParams mat[2],
     const double J_joule_per_link[2][2],
     const std::vector<std::array<int, constants::FCC_NN_COUNT>>&
     nearest_neighbors,
@@ -14,8 +16,10 @@ void compute_exch_field(
     std::vector<double>& Hy_exch_tesla,
     std::vector<double>& Hz_exch_tesla)
 {
-    for (int i=0; i < species.size(); ++i) {
+    const int N = static_cast<int>(species.size());
+    for (int i=0; i < N; ++i) {
         const int si = species[i];
+        const double mu_ampere_m2 = mat[si].mu_ampere_m2;
         Hx_exch_tesla[i] = 0.0;
         Hy_exch_tesla[i] = 0.0;
         Hz_exch_tesla[i] = 0.0;
@@ -24,15 +28,15 @@ void compute_exch_field(
             const int sj = species[j];
             const double J_ij_joule_per_link = J_joule_per_link[si][sj];
 
-            Hx_exch_tesla[i] += J_ij_joule_per_link * mx[j];
-            Hy_exch_tesla[i] += J_ij_joule_per_link * my[j];
-            Hz_exch_tesla[i] += J_ij_joule_per_link * mz[j];
+            Hx_exch_tesla[i] += J_ij_joule_per_link * mx[j] / mu_ampere_m2;
+            Hy_exch_tesla[i] += J_ij_joule_per_link * my[j] / mu_ampere_m2;
+            Hz_exch_tesla[i] += J_ij_joule_per_link * mz[j] / mu_ampere_m2;
         }
     }
 }
 
 void compute_uniaxial_anis_field(
-    const MatParams phys_params[2],
+    const MatParams mat[2],
     const std::vector<uint8_t>& species,
     const std::vector<double>& mx_arr,
     const std::vector<double>& my_arr,
@@ -41,22 +45,25 @@ void compute_uniaxial_anis_field(
     std::vector<double>& Hy_anis_tesla,
     std::vector<double>& Hz_anis_tesla)
 {
-    for (int i=0; i < species.size(); ++i) {
+    const int N = static_cast<int>(species.size());
+    for (int i=0; i < N; ++i) {
         const int s = species[i];
-        const double  ku_joule_per_atom = phys_params[s].ku_joule_per_atom;
-        const Vec3 easy_axis         = phys_params[s].easy_axis;
+        const double mu_ampere_m2      = mat[s].mu_ampere_m2;
+        const double ku_joule_per_atom = mat[s].ku_joule_per_atom;
+        const Vec3   easy_axis         = mat[s].easy_axis;
         const double mx = mx_arr[i];
         const double my = my_arr[i];
         const double mz = mz_arr[i];
 
         const double dot =
             mx*easy_axis.x + my*easy_axis.y + mz*easy_axis.z;
-        Hx_anis_tesla[i] = 2.*ku_joule_per_atom*dot*easy_axis.x;
-        Hy_anis_tesla[i] = 2.*ku_joule_per_atom*dot*easy_axis.y;
-        Hz_anis_tesla[i] = 2.*ku_joule_per_atom*dot*easy_axis.z;
+        Hx_anis_tesla[i] = 2.*ku_joule_per_atom*dot*easy_axis.x / mu_ampere_m2;
+        Hy_anis_tesla[i] = 2.*ku_joule_per_atom*dot*easy_axis.y / mu_ampere_m2;
+        Hz_anis_tesla[i] = 2.*ku_joule_per_atom*dot*easy_axis.z / mu_ampere_m2;
     }
 }
 
+// TODO: May use one normal_distribution instead of building three in each step.
 void compute_ther_field_once(const MatParams mat[2],
     const std::vector<uint8_t>& species,
     double T_kelvin, double dt_sec, RNG& rng,
@@ -64,7 +71,8 @@ void compute_ther_field_once(const MatParams mat[2],
     std::vector<double>& Hy_ther_tesla,
     std::vector<double>& Hz_ther_tesla)
 {
-    for (int i=0; i < species.size(); ++i) {
+    const int N = static_cast<int>(species.size());
+    for (int i=0; i < N; ++i) {
         const int s = species[i];
         const double alpha = mat[s].alpha;
         const double gamma_rad_per_tesla_sec =
@@ -81,7 +89,7 @@ void compute_ther_field_once(const MatParams mat[2],
 }
 
 void compute_total_field(
-    const MatParams phys_params[2],
+    const MatParams mat[2],
     const double J_joule_per_link[2][2],
     const std::vector<std::array<int, constants::FCC_NN_COUNT>>&
     nearest_neighbors,
@@ -103,10 +111,10 @@ void compute_total_field(
     std::vector<double>& Hy_total_tesla,
     std::vector<double>& Hz_total_tesla)
 {
-    compute_exch_field(J_joule_per_link, nearest_neighbors, species,
+    compute_exch_field(mat, J_joule_per_link, nearest_neighbors, species,
         mx, my, mz,
         Hx_exch_tesla, Hy_exch_tesla, Hz_exch_tesla);
-    compute_uniaxial_anis_field(phys_params, species,
+    compute_uniaxial_anis_field(mat, species,
         mx, my, mz,
         Hx_anis_tesla, Hy_anis_tesla, Hz_anis_tesla);
 

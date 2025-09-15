@@ -1,18 +1,18 @@
-#include <filesystem>
-#include <fstream>
-#include <unordered_map>
-#include <vector>
-#include <iostream>
-#include <string>
-#include "params.h"
+#include "io.h"
 #include "io_csv_utils.h"
 #include "lattice.h"
 #include "math_utils.h"
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <unordered_map>
+#include <vector>
 using namespace io::csv;
 
 /// Expected columns (order free):
-// seed, pre_steps, run_steps, save_steps, dt_sec,
-// run_parent_path, run_base_folder, pre_Te_kelvin, input_Te_path
+// run_parent_dir, run_base_folder, Te_filepath,
+// seed, pre_steps, run_steps, save_steps, show_steps, dt_sec, pre_Te_kelvin,
 // nx, ny, nz, a_m, frac_Gd,
 // J_FeFe_joule_per_link, J_FeGd_joule_per_link, J_GdGd_joule_per_link,
 // mx_init_Fe, my_init_Fe, mz_init_Fe,
@@ -69,23 +69,21 @@ bool read_input_csv(const std::string& csv_path, ControlParams& control,
 
     std::string header, values;
     if (!std::getline(fin, header) || !std::getline(fin, values)) {
-        std::cerr << "[ERROR] Expected 2 lines (header + values).\n";
+        std::cerr << "io: Expected 2 lines (header + values).\n";
         return false;
     }
 
     auto keys = split_line_csv(header);
     auto vals_str = split_line_csv(values);
     if (vals_str.size() != keys.size()) {
-        std::cerr << "[ERROR] Expected " << keys.size()
-            << " entries for values.\n";
+        std::cerr << "io: Expected " << keys.size() << " entries for values.\n";
         return false;
     }
 
     std::unordered_map<std::string,int> key_idx_map;
     for (int i=0; i < static_cast<int>(keys.size()); ++i) {
-        const std::string& k = keys[i];
-        trim(k);
-        if (!k.empty()) key_idx_map[k] = i;
+        if (const std::string& k = keys[i]; !k.empty())
+            key_idx_map[k] = i;
     }
 
     try {
@@ -94,11 +92,12 @@ bool read_input_csv(const std::string& csv_path, ControlParams& control,
         control.pre_steps       = get_int(key_idx_map, vals_str, "pre_steps");
         control.run_steps       = get_int(key_idx_map, vals_str, "run_steps");
         control.save_steps      = get_int(key_idx_map, vals_str, "save_steps");
+        control.show_steps      = get_int(key_idx_map, vals_str, "show_steps");
         control.dt_sec          = get_dou(key_idx_map, vals_str, "dt_sec");
         control.pre_Te_kelvin   = get_dou(key_idx_map, vals_str, "pre_Te_kelvin");
-        control.run_parent_path = get_str(key_idx_map, vals_str, "run_parent_path");
+        control.run_parent_dir = get_str(key_idx_map, vals_str, "run_parent_dir");
         control.run_base_folder = get_str(key_idx_map, vals_str, "run_base_folder");
-        control.input_Te_path   = get_str(key_idx_map, vals_str, "input_Te_path");
+        control.Te_filepath   = get_str(key_idx_map, vals_str, "Te_filepath");
 
         // FCC params
         lat.nx      = get_int(key_idx_map, vals_str, "nx");
@@ -132,7 +131,7 @@ bool read_input_csv(const std::string& csv_path, ControlParams& control,
         auto fill_phys = [&mat, &key_idx_map, &vals_str](int s, const char* tag)
         {
             MatParams& P = mat[s];
-            const std::string mu = std::string("mu_ampere_m2_")    + tag;
+            const std::string mu = std::string("mu_ampere_m2_") + tag;
             const std::string al = std::string("alpha_") + tag;
             const std::string ga = std::string("gamma_rad_per_tesla_sec_") + tag;
             const std::string ku = std::string("ku_joule_per_atom_")    + tag;
@@ -152,7 +151,7 @@ bool read_input_csv(const std::string& csv_path, ControlParams& control,
         fill_phys(1, "Gd");
     }
     catch (const std::exception& e) {
-        std::cerr << "[ERROR] " << e.what() << "\n";
+        std::cerr << "io: " << e.what() << "\n";
         return false;
     }
     return true;

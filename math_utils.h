@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
+#include <vector>
 #include "params.h"
 
 inline void normalize3(double& x, double& y, double& z) {

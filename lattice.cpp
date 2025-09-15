@@ -43,7 +43,7 @@ namespace {
     //  10 % -3 =  1
     // -10 %  3 = -1
     // -10 % -3 = -1
-    int wrap_modulo(int v, int m) {
+    int wrap_modulo(const int v, const int m) {
         assert(m > 0 && "wrap_modulo: modulus m must be > 0");
         int r = v % m;
         return (r < 0) ? (r + m) : r; // Returns in [0, m-1]
@@ -72,18 +72,18 @@ void build_fcc_nn(const int nx, const int ny, const int nz,
 
                     std::array<int,constants::FCC_NN_COUNT> neis;
                     for (int q=0; q < constants::FCC_NN_COUNT; ++q) {
-                        int nei_gx = wrap_modulo(gx + NN12_OFF[q][0], GX);
-                        int nei_gy = wrap_modulo(gy + NN12_OFF[q][1], GY);
-                        int nei_gz = wrap_modulo(gz + NN12_OFF[q][2], GZ);
+                        const int nei_gx = wrap_modulo(gx + NN12_OFF[q][0], GX);
+                        const int nei_gy = wrap_modulo(gy + NN12_OFF[q][1], GY);
+                        const int nei_gz = wrap_modulo(gz + NN12_OFF[q][2], GZ);
 
                         // grid coords back to cell + basis:
-                        int nei_i = nei_gx >> 1;  // divide by 2
-                        int nei_j = nei_gy >> 1;
-                        int nei_k = nei_gz >> 1;
-                        int rx = nei_gx & 1;      // remainder (0 or 1)
-                        int ry = nei_gy & 1;
-                        int rz = nei_gz & 1;
-                        int nei_b = fcc_basis_from_remainders(rx, ry, rz);
+                        const int nei_i = nei_gx >> 1;  // divide by 2
+                        const int nei_j = nei_gy >> 1;
+                        const int nei_k = nei_gz >> 1;
+                        const int rx = nei_gx & 1;      // remainder (0 or 1)
+                        const int ry = nei_gy & 1;
+                        const int rz = nei_gz & 1;
+                        const int nei_b = fcc_basis_from_remainders(rx, ry, rz);
 
                         neis[q] = lin_from_cell_and_basis(nei_i, nei_j, nei_k,
                             nei_b, nx, ny, nz, constants::FCC_BASIS_COUNT);
