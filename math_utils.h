@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
+#include "params.h"
 
 inline void normalize3(double& x, double& y, double& z) {
     if (const double n = std::sqrt(x*x + y*y + z*z); n > 0.0) {

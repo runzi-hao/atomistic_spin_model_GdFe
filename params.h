@@ -3,15 +3,15 @@
 #include <cstdint>
 #include <string>
 
-struct Vec3 {
-    double x, y, z;
-};
 namespace constants {
     constexpr double KB_JOULE_PER_KELVIN = 1.380649e-23;
     constexpr int FCC_NN_COUNT    = 12;
     constexpr int FCC_BASIS_COUNT = 4;
 }
 
+struct Vec3 {
+    double x, y, z;
+};
 //------------------------------------------------------------------------------
 struct ControlParams {
     uint32_t seed;

@@ -8,6 +8,7 @@
 #include "reductions.h"
 #include "rng.h"
 #include <filesystem>
+#include <iostream>
 namespace fs = std::filesystem;
 
 int main() {
@@ -15,6 +16,7 @@ int main() {
     ControlParams control{};
     LatParams lat{};
     MatParams mat[2]{};
+
     read_input_csv("input.csv", control, lat, mat);
     /// Compute N, normalize easy axes and initial magnetizations
     process_input(lat, mat);
@@ -50,7 +52,9 @@ int main() {
 
     // 5. Read temperature series ----------------------------------------------
     std::vector<double> Te_kelvin_arr;
-    read_temperature_series_csv(control.input_Te_path, Te_kelvin_arr);
+    read_temperature_series_csv(
+        control.input_Te_path + "/temperatures_input.txt",
+        Te_kelvin_arr);
     if (static_cast<int>(Te_kelvin_arr.size()) < control.run_steps) {
         throw std::runtime_error("Temperature data not enough (" +
             std::to_string(control.run_steps) + " required)");
@@ -61,10 +65,9 @@ int main() {
         ++curr_step)
     {
         // Set temperature
-        double T_kelvin = control.pre_Te_kelvin;
-        if (curr_step >= control.pre_steps) {
-            T_kelvin = Te_kelvin_arr[curr_step];
-        }
+        double T_kelvin = (curr_step < control.pre_steps) ?
+            control.pre_Te_kelvin :
+            Te_kelvin_arr[curr_step - control.pre_steps];
         compute_ther_field_once(mat, species, T_kelvin, control.dt_sec, rng,
             Hx_ther_tesla, Hy_ther_tesla, Hz_ther_tesla);
 
@@ -111,9 +114,10 @@ int main() {
         if (curr_step % control.save_steps == 0) {
             BulkValues bulk_vals{};
             compute_bulk_m(species, mx, my, mz, bulk_vals);
-            fs::path run_abs_path = fs::path(control.run_parent_path) /
-                control.run_base_folder / "bulk_values_vs_time.csv";
-            write_bulk_values(run_abs_path.string(), curr_step, T_kelvin, bulk_vals);
+            fs::path run_dir = fs::path(control.run_parent_path) /
+                control.run_base_folder;
+            fs::path run_filepath = run_dir / "bulk_values_vs_time.csv";
+            write_bulk_values(run_filepath.string(), curr_step, T_kelvin, bulk_vals);
         }
     }
 

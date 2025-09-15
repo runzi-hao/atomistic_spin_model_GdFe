@@ -63,7 +63,7 @@ bool read_input_csv(const std::string& csv_path, ControlParams& control,
 {
     std::ifstream fin(csv_path);
     if (!fin) {
-        std::cerr << "[ERROR] Failed to open file: " << csv_path << "\n";
+        std::cerr << "io: Failed to open file: " << csv_path << "\n";
         return false;
     }
 
@@ -158,11 +158,12 @@ bool read_input_csv(const std::string& csv_path, ControlParams& control,
     return true;
 }
 
-void process_input(ControlParams& sim, LatParams& lat, MatParams mat[2]) {
+void process_input(LatParams& lat, MatParams mat[2]) {
     lat.N = count_fcc_sites(lat.nx, lat.ny, lat.nz);
     normalize3(lat.mx_init_Fe, lat.my_init_Fe, lat.mz_init_Fe);
     normalize3(lat.mx_init_Gd, lat.my_init_Gd, lat.mz_init_Gd);
-    for (auto& m : mat) {
+    for (int i=0; i < 2; ++i) {
+        auto& m = mat[i];
         normalize3(m.easy_axis);
     }
 }

@@ -10,7 +10,8 @@ void read_temperature_series_csv(const std::string& path,
 {
     std::ifstream fin(path);
     if (!fin)
-        throw std::runtime_error("[ERROR] Failed to open file: " + path);
+        throw std::runtime_error(
+            "io_temperature_csv: Failed to open file: " + path);
 
     Te_kelvin.reserve(1024);
     std::string line;
