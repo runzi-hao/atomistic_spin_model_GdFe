@@ -31,9 +31,9 @@ Thumbs.db
 # Python helper scripts cache (if any)
 __pycache__/
 *.pyc
+*.py
 
 # Project specific
-/*.csv
-/*.vtk
-/*.vti
-/*.py
+*.csv
+*.vtk
+*.vti
