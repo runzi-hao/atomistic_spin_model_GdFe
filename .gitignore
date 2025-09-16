@@ -2,6 +2,12 @@
 .idea/
 cmake-build-*/
 
+# Build system (CMake, Make, Ninja, etc.)
+build/
+*.ninja
+*.ninja_deps
+*.ninja_log
+
 # Executables and binaries
 *.exe
 *.out
