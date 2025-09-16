@@ -53,16 +53,14 @@ int main() {
 
     // 5. Read temperature series ----------------------------------------------
     std::vector<double> Te_kelvin_arr;
-    read_temperature_series_csv(
-        control.Te_filepath,
-        Te_kelvin_arr);
+    read_temperature_series_csv(control.Te_filepath, Te_kelvin_arr);
     if (static_cast<int>(Te_kelvin_arr.size()) < control.run_steps) {
         throw std::runtime_error("Temperature data not enough (" +
             std::to_string(control.run_steps) + " required)");
     }
 
     // 6. Time evolve ----------------------------------------------------------
-    for (int curr_step=0; curr_step < control.pre_steps + control.run_steps;
+    for (int curr_step=0; curr_step <= control.pre_steps + control.run_steps;
         ++curr_step)
     {
         // Set temperature
