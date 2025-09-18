@@ -1,6 +1,7 @@
 #include "fields.h"
 #include <array>
 #include <cmath>
+#include <iostream>
 #include <vector>
 
 void compute_exch_field(
@@ -26,8 +27,8 @@ void compute_exch_field(
         for (int k=0; k < nearest_neighbors[i].size(); ++k) {
             int j = nearest_neighbors[i][k];
             const int sj = species[j];
-            const double J_ij_joule_per_link = J_joule_per_link[si][sj];
-
+            // TODO: Discuss again whether should use factor of 2.
+            const double J_ij_joule_per_link = J_joule_per_link[si][sj] * 1.0;;
             Hx_exch_tesla[i] += J_ij_joule_per_link * mx[j] / mu_ampere_m2;
             Hy_exch_tesla[i] += J_ij_joule_per_link * my[j] / mu_ampere_m2;
             Hz_exch_tesla[i] += J_ij_joule_per_link * mz[j] / mu_ampere_m2;

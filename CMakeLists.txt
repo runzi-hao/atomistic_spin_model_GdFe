@@ -30,11 +30,14 @@ add_executable(atomistic_spin_model_GdFe main.cpp
         io.h
         io_temperature_csv.cpp
         io_temperature_csv.h
+        test.cpp
+        test.h
         params.h
         math_utils.h
         rng.h
         io_csv_utils.h
-        init.h)
+        init.h
+)
 
 target_include_directories(atomistic_spin_model_GdFe PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}")

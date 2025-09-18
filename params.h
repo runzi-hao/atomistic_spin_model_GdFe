@@ -46,11 +46,19 @@ struct MatParams {
 
 //------------------------------------------------------------------------------
 struct BulkValues {
-    double mx_Fe,   my_Fe,   mz_Fe;
-    double mx_Gd,   my_Gd,   mz_Gd;
-    double mx_bulk, my_bulk, mz_bulk;
+    double mx_Fe{0},   my_Fe{0},   mz_Fe{0};
+    double mx_Gd{0},   my_Gd{0},   mz_Gd{0};
+    double mx_bulk{0}, my_bulk{0}, mz_bulk{0};
 };
+struct BulkFields {
+    double Hx_exch_tesla_Fe{0},  Hy_exch_tesla_Fe{0},  Hz_exch_tesla_Fe{0};
+    double Hx_anis_tesla_Fe{0},  Hy_anis_tesla_Fe{0},  Hz_anis_tesla_Fe{0};
+    double Hx_ther_tesla_Fe{0},  Hy_ther_tesla_Fe{0},  Hz_ther_tesla_Fe{0};
 
+    double Hx_exch_tesla_Gd{0},  Hy_exch_tesla_Gd{0},  Hz_exch_tesla_Gd{0};
+    double Hx_anis_tesla_Gd{0},  Hy_anis_tesla_Gd{0},  Hz_anis_tesla_Gd{0};
+    double Hx_ther_tesla_Gd{0},  Hy_ther_tesla_Gd{0},  Hz_ther_tesla_Gd{0};
+};
 // // std::vector<double> x_m, y_m, z_m; // site positions
 // std::vector<std::array<int, constants::FCC_NN_COUNT>> nearest_neighbors;
 // std::vector<uint8_t> species;         // 0=Fe,1=Gd

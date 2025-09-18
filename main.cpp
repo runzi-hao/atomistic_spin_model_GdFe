@@ -7,6 +7,7 @@
 #include "lattice.h"
 #include "reductions.h"
 #include "rng.h"
+#include "test.h"
 #include <filesystem>
 #include <iostream>
 namespace fs = std::filesystem;
@@ -60,6 +61,13 @@ int main() {
     }
 
     // 6. Time evolve ----------------------------------------------------------
+    fs::path run_dir = fs::path(control.run_parent_dir) /
+        control.run_base_folder;
+    // fs::path out_nn = run_dir / "nearest_neighbors.txt";
+    // write_nearest_neighbors(out_nn.string(), lat.nx, lat.ny, lat.nz, constants::FCC_BASIS_COUNT, nearest_neighbors);
+    // fs::path out_site_species = run_dir / "Gd_sites.txt";
+    // write_site_species(out_site_species.string(), lat.nx, lat.ny, lat.nz, constants::FCC_BASIS_COUNT, species);
+    count_atoms(species);
     for (int curr_step=0; curr_step <= control.pre_steps + control.run_steps;
         ++curr_step)
     {
@@ -82,6 +90,16 @@ int main() {
             Hx_anis_tesla,  Hy_anis_tesla,  Hz_anis_tesla,
             Hx_ther_tesla,  Hy_ther_tesla,  Hz_ther_tesla,
             Hx_total_tesla, Hy_total_tesla, Hz_total_tesla);
+        // Reductions & outputs
+        if (curr_step % control.save_steps == 0) {
+            BulkValues bulk_vals{};
+            compute_bulk_m(species, mx, my, mz, bulk_vals);
+            BulkFields bulk_fields{};
+            compute_bulk_fields(species, Hx_exch_tesla, Hy_exch_tesla, Hz_exch_tesla, Hx_anis_tesla, Hy_anis_tesla, Hz_anis_tesla, Hx_ther_tesla, Hy_ther_tesla, Hz_ther_tesla, bulk_fields);
+            fs::path run_filepath = run_dir / "bulk_values_vs_time.csv";
+            write_bulk_values(run_filepath.string(), curr_step,
+                T_kelvin, bulk_vals, bulk_fields);
+        }
         compute_dm_dt_kernel(mat, species,
             mx_mid, my_mid, mz_mid,
             Hx_total_tesla, Hy_total_tesla, Hz_total_tesla,
@@ -109,15 +127,6 @@ int main() {
             dmx_dt_st1, dmy_dt_st1, dmz_dt_st1,
             dmx_dt_st2, dmy_dt_st2, dmz_dt_st2, control.dt_sec);
 
-        // 7. Reductions & outputs ---------------------------------------------
-        if (curr_step % control.save_steps == 0) {
-            BulkValues bulk_vals{};
-            compute_bulk_m(species, mx, my, mz, bulk_vals);
-            fs::path run_dir = fs::path(control.run_parent_dir) /
-                control.run_base_folder;
-            fs::path run_filepath = run_dir / "bulk_values_vs_time.csv";
-            write_bulk_values(run_filepath.string(), curr_step, T_kelvin, bulk_vals);
-        }
         if (curr_step % control.show_steps == 0) {
             std::cout << curr_step << std::endl;
         }

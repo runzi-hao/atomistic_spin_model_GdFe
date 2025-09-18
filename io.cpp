@@ -6,6 +6,8 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <locale>
+#include <stdexcept>
 #include <unordered_map>
 #include <vector>
 using namespace io::csv;
@@ -63,20 +65,21 @@ bool read_input_csv(const std::string& csv_path, ControlParams& control,
 {
     std::ifstream fin(csv_path);
     if (!fin) {
-        std::cerr << "io: Failed to open file: " << csv_path << "\n";
+        std::cerr << "io:read_input_csv: Failed to open file: " << csv_path
+                  << "\n";
         return false;
     }
 
     std::string header, values;
     if (!std::getline(fin, header) || !std::getline(fin, values)) {
-        std::cerr << "io: Expected 2 lines (header + values).\n";
+        std::cerr << "io:read_input_csv: Expected 2 lines (header + values).\n";
         return false;
     }
 
     auto keys = split_line_csv(header);
     auto vals_str = split_line_csv(values);
     if (vals_str.size() != keys.size()) {
-        std::cerr << "io: Expected " << keys.size() << " entries for values.\n";
+        std::cerr << "io:read_input_csv: Expected " << keys.size() << " entries for values.\n";
         return false;
     }
 
@@ -151,7 +154,7 @@ bool read_input_csv(const std::string& csv_path, ControlParams& control,
         fill_phys(1, "Gd");
     }
     catch (const std::exception& e) {
-        std::cerr << "io: " << e.what() << "\n";
+        std::cerr << "io:read_input_csv: " << e.what() << "\n";
         return false;
     }
     return true;
@@ -171,13 +174,13 @@ void write_bulk_values(const std::string& csv_path, const int time_step,
     const double T_kelvin, const BulkValues& bulk)
 {
     try {
-        std::filesystem::path p(csv_path);
-        if (!p.parent_path().empty()) {
+        if (const std::filesystem::path p(csv_path); !p.parent_path().empty()) {
             std::filesystem::create_directories(p.parent_path());
         }
     } catch (const std::exception& e) {
         throw std::runtime_error(std::string(
-            "write_bulk_values: Failed to create directories: ") + e.what());
+            "io:write_bulk_values: "
+            "Failed to create directories: ") + e.what());
     }
 
     // Check if header is needed
@@ -191,8 +194,67 @@ void write_bulk_values(const std::string& csv_path, const int time_step,
     std::ofstream ofs(csv_path, std::ios::out | std::ios::app);
     if (!ofs) {
         throw std::runtime_error(
-            "write_bulk_values: Failed to open file: " + csv_path);
+            "io:write_bulk_values: Failed to open file: " + csv_path);
     }
+
+    ofs.imbue(std::locale::classic());
+    ofs << std::defaultfloat << std::setprecision(10);
+    if (need_header) {
+        ofs << "time_step,T_kelvin,"
+               "mx_Fe,my_Fe,mz_Fe,"
+               "mx_Gd,my_Gd,mz_Gd,"
+               "mx_bulk,my_bulk,mz_bulk,"
+               "Hx_exch_tesla_Fe,Hy_exch_tesla_Fe,Hz_exch_tesla_Fe,"
+               "Hx_anis_tesla_Fe,Hy_anis_tesla_Fe,Hz_anis_tesla_Fe,"
+               "Hx_ther_tesla_Fe,Hy_ther_tesla_Fe,Hz_ther_tesla_Fe,"
+               "Hx_exch_tesla_Gd,Hy_exch_tesla_Gd,Hz_exch_tesla_Gd,"
+               "Hx_anis_tesla_Gd,Hy_anis_tesla_Gd,Hz_anis_tesla_Gd,"
+               "Hx_ther_tesla_Gd,Hy_ther_tesla_Gd,Hz_ther_tesla_Gd"
+               "\n";
+    }
+
+    ofs
+        << time_step << ',' << T_kelvin << ','
+        << bulk.mx_Fe   << ',' << bulk.my_Fe   << ',' << bulk.mz_Fe   << ','
+        << bulk.mx_Gd   << ',' << bulk.my_Gd   << ',' << bulk.mz_Gd   << ','
+        << bulk.mx_bulk << ',' << bulk.my_bulk << ',' << bulk.mz_bulk << ','
+        << "0,0,0,"
+        << "0,0,0,"
+        << "0,0,0,"
+        << "0,0,0,"
+        << "0,0,0,"
+        << "0,0,0"
+        << '\n';
+}
+
+void write_bulk_values(const std::string& csv_path, const int time_step,
+    const double T_kelvin,
+    const BulkValues& bulk_vals,
+    const BulkFields& bulk_fields)
+{
+    try {
+        if (const std::filesystem::path p(csv_path); !p.parent_path().empty()) {
+            std::filesystem::create_directories(p.parent_path());
+        }
+    } catch (const std::exception& e) {
+        throw std::runtime_error(std::string(
+            "io:write_bulk_values: Failed to create directories: ") + e.what());
+    }
+
+    // Check if header is needed
+    bool need_header = false;
+    if (!std::filesystem::exists(csv_path) ||
+        std::filesystem::file_size(csv_path) == 0)
+    {
+        need_header = true;
+    }
+
+    std::ofstream ofs(csv_path, std::ios::out | std::ios::app);
+    if (!ofs) {
+        throw std::runtime_error(
+            "io:write_bulk_values: Failed to open file: " + csv_path);
+    }
+
     ofs.imbue(std::locale::classic());
     ofs << std::defaultfloat << std::setprecision(10);
 
@@ -200,15 +262,103 @@ void write_bulk_values(const std::string& csv_path, const int time_step,
         ofs << "time_step,T_kelvin,"
                "mx_Fe,my_Fe,mz_Fe,"
                "mx_Gd,my_Gd,mz_Gd,"
-               "mx_bulk,my_bulk,mz_bulk\n";
+               "mx_bulk,my_bulk,mz_bulk,"
+               "Hx_exch_tesla_Fe,Hy_exch_tesla_Fe,Hz_exch_tesla_Fe,"
+               "Hx_anis_tesla_Fe,Hy_anis_tesla_Fe,Hz_anis_tesla_Fe,"
+               "Hx_ther_tesla_Fe,Hy_ther_tesla_Fe,Hz_ther_tesla_Fe,"
+               "Hx_exch_tesla_Gd,Hy_exch_tesla_Gd,Hz_exch_tesla_Gd,"
+               "Hx_anis_tesla_Gd,Hy_anis_tesla_Gd,Hz_anis_tesla_Gd,"
+               "Hx_ther_tesla_Gd,Hy_ther_tesla_Gd,Hz_ther_tesla_Gd"
+               "\n";
     }
 
     ofs
         << time_step << ',' << T_kelvin << ','
-        << bulk.mx_Fe   << ',' << bulk.my_Fe   << ',' << bulk.mz_Fe << ','
-        << bulk.mx_Gd   << ',' << bulk.my_Gd   << ',' << bulk.mz_Gd << ','
-        << bulk.mx_bulk << ',' << bulk.my_bulk << ',' << bulk.mz_bulk
+        << bulk_vals.mx_Fe   << ',' << bulk_vals.my_Fe   << ',' << bulk_vals.mz_Fe << ','
+        << bulk_vals.mx_Gd   << ',' << bulk_vals.my_Gd   << ',' << bulk_vals.mz_Gd << ','
+        << bulk_vals.mx_bulk << ',' << bulk_vals.my_bulk << ',' << bulk_vals.mz_bulk << ','
+        << bulk_fields.Hx_exch_tesla_Fe << ',' << bulk_fields.Hy_exch_tesla_Fe << ',' << bulk_fields.Hz_exch_tesla_Fe << ','
+        << bulk_fields.Hx_anis_tesla_Fe << ',' << bulk_fields.Hy_anis_tesla_Fe << ',' << bulk_fields.Hz_anis_tesla_Fe << ','
+        << bulk_fields.Hx_ther_tesla_Fe << ',' << bulk_fields.Hy_ther_tesla_Fe << ',' << bulk_fields.Hz_ther_tesla_Fe << ','
+        << bulk_fields.Hx_exch_tesla_Gd << ',' << bulk_fields.Hy_exch_tesla_Gd << ',' << bulk_fields.Hz_exch_tesla_Gd << ','
+        << bulk_fields.Hx_anis_tesla_Gd << ',' << bulk_fields.Hy_anis_tesla_Gd << ',' << bulk_fields.Hz_anis_tesla_Gd << ','
+        << bulk_fields.Hx_ther_tesla_Gd << ',' << bulk_fields.Hy_ther_tesla_Gd << ',' << bulk_fields.Hz_ther_tesla_Gd
         << '\n';
 }
 
+/// Write one line per site:
+/// Atom_index:i,j,k,b, nn_index:i,j,k,b, ..., nn_index:i,j,k,b
+void write_nearest_neighbors(const std::string& filepath,
+    const int nx, const int ny, const int nz, const int n_basis,
+    const std::vector<std::array<int, constants::FCC_NN_COUNT>>&
+    nearest_neighbors)
+{
+    try {
+        if (const std::filesystem::path p(filepath); !p.parent_path().empty()) {
+            std::filesystem::create_directories(p.parent_path());
+        }
+    }
+    catch (const std::exception& e) {
+        throw std::runtime_error(std::string(
+            "io:write_nearest_neighbors: "
+            "Failed to create directories: ") + e.what());
+    }
 
+    std::ofstream ofs(filepath, std::ios::out | std::ios::trunc);
+    if (!ofs) {
+        throw std::runtime_error(
+            "io:write_nearest_neighbors: Failed to open file: " + filepath);
+    }
+
+    const int N = static_cast<int>(nearest_neighbors.size());
+    ofs << "# Atom_index:i,j,k,b, nn_index:i,j,k,b, ..., nn_index:i,j,k,b\n";
+    for (int p = 0; p < N; ++p) {
+        int ni, nj, nk, nb;
+        invert_linear_index(
+            p, nx, ny, nz, n_basis, ni, nj, nk, nb);
+        ofs << "Atom_" << p << ":"
+            << ni << ',' << nj << ',' << nk << ',' << nb;
+        for (int q = 0; q < constants::FCC_NN_COUNT; ++q) {
+            const int nei = nearest_neighbors[p][q];
+            invert_linear_index(nei, nx, ny, nz, n_basis,
+                ni, nj, nk, nb);
+            ofs << ", nn_" << nei << ":"
+                << ni << ',' << nj << ',' << nk << ',' << nb;
+        }
+        ofs << '\n';
+    }
+}
+
+/// Write all Gd positions (species==1):
+/// Gd_<index>:i,j,k,b
+void write_site_species(const std::string& filepath,
+    const int nx, const int ny, const int nz, const int n_basis,
+    const std::vector<uint8_t>& species)
+{
+    try {
+        if (const std::filesystem::path p(filepath); !p.parent_path().empty()) {
+            std::filesystem::create_directories(p.parent_path());
+        }
+    }
+    catch (const std::exception& e) {
+        throw std::runtime_error(std::string(
+            "io:write_site_species: Failed to create directories: ") + e.what());
+    }
+
+    std::ofstream ofs(filepath, std::ios::out | std::ios::trunc);
+    if (!ofs) {
+        throw std::runtime_error(
+            "io:write_site_species: Failed to open file: " + filepath);
+    }
+
+    const int N = static_cast<int>(species.size());
+    ofs << "# Gd_<index>:i,j,k,b\n";
+    for (int p = 0; p < N; ++p) {
+        if (species[p] == 1) { // 0=Fe, 1=Gd
+            int i, j, k, b;
+            invert_linear_index(p, nx, ny, nz, n_basis, i, j, k, b);
+            ofs << "Gd_" << p << ':'
+                << i << ',' << j << ',' << k << ',' << b << '\n';
+        }
+    }
+}
