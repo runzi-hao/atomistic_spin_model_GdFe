@@ -5,12 +5,10 @@
 #include <vector>
 
 /// Initialize per-site magnetization:
-///   Fe (species==0): (0, 0, -1)
-///   Gd (species!=0): (0, 0,  1)
 inline void initialize_m(const uint8_t* species, int N,
     double* mx, double* my, double* mz,
-    double mx_Fe, double my_Fe, double mz_Fe,
-    double mx_Gd, double my_Gd, double mz_Gd)
+    const double mx_Fe, const double my_Fe, const double mz_Fe,
+    const double mx_Gd, const double my_Gd, const double mz_Gd)
 {
     assert(species && mx && my && mz);
     for (int i = 0; i < N; ++i) {
