@@ -7,6 +7,7 @@ namespace constants {
     constexpr double KB_JOULE_PER_KELVIN = 1.380649e-23;
     constexpr int FCC_NN_COUNT    = 12;
     constexpr int FCC_BASIS_COUNT = 4;
+    constexpr double EXCH_FACTOR  = 1.0;
 }
 
 struct Vec3 {

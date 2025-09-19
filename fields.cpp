@@ -20,19 +20,21 @@ void compute_exch_field(
     const int N = static_cast<int>(species.size());
     for (int i=0; i < N; ++i) {
         const int si = species[i];
-        const double mu_ampere_m2 = mat[si].mu_ampere_m2;
-        Hx_exch_tesla[i] = 0.0;
-        Hy_exch_tesla[i] = 0.0;
-        Hz_exch_tesla[i] = 0.0;
-        for (int k=0; k < nearest_neighbors[i].size(); ++k) {
-            int j = nearest_neighbors[i][k];
+        const double inv_mu_per_ampere_m2 = 1.0 / mat[si].mu_ampere_m2;
+        double Hx_exch_joule = 0.0, Hy_exch_joule = 0.0, Hz_exch_joule = 0.0;
+
+        for (const int j : nearest_neighbors[i]) {
             const int sj = species[j];
             // TODO: Discuss again whether should use factor of 2.
-            const double J_ij_joule_per_link = J_joule_per_link[si][sj] * 1.0;;
-            Hx_exch_tesla[i] += J_ij_joule_per_link * mx[j] / mu_ampere_m2;
-            Hy_exch_tesla[i] += J_ij_joule_per_link * my[j] / mu_ampere_m2;
-            Hz_exch_tesla[i] += J_ij_joule_per_link * mz[j] / mu_ampere_m2;
+            const double J_ij_joule_per_link =
+                J_joule_per_link[si][sj] * constants::EXCH_FACTOR;
+            Hx_exch_joule += J_ij_joule_per_link * mx[j];
+            Hy_exch_joule += J_ij_joule_per_link * my[j];
+            Hz_exch_joule += J_ij_joule_per_link * mz[j];
         }
+        Hx_exch_tesla[i] = Hx_exch_joule * inv_mu_per_ampere_m2;
+        Hy_exch_tesla[i] = Hy_exch_joule * inv_mu_per_ampere_m2;
+        Hz_exch_tesla[i] = Hz_exch_joule * inv_mu_per_ampere_m2;
     }
 }
 
